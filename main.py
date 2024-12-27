@@ -3,10 +3,10 @@ import tensorflow as tf
 import numpy as np
 
 
-#Tensorflow Model
+#Tensorflow Model Prediction
 def model_prediction(test_image):
 #    model = tf.keras.models.load_model("trained_maize_disease_model.keras")
-    model = tf.keras.models.load_model("maize_disease_detection_model.h5")
+    model = tf.keras.models.load_model("maize_disease_detection_model3.h5")
     image = tf.keras.preprocessing.image.load_img(test_image,target_size=(256,256))
 
     image_arr = tf.keras.preprocessing.image.img_to_array(image)    # processing image ka cusub ee shaqayna
@@ -25,8 +25,8 @@ app_mode = st.sidebar.selectbox("Select Page",["Home","About Us","Disease Detect
 #Main Page
 if(app_mode=="Home"):
     st.header("PLANT DISEASE RECOGNITION SYSTEM")
-    image_path = "Home.jpg"
-    st.image(image_path,use_container_width=True)
+    image_path = "Home.JPG"
+    st.image(image_path,use_column_width=True)
     st.markdown("""
     Welcome to the Plant Disease Recognition System! 
     
@@ -66,7 +66,7 @@ elif(app_mode=="Disease Detection"):
     st.header("Disease Detection")
     test_image = st.file_uploader("Choose an Image:")
     if(st.button("Show Image")):
-        st.image(test_image,width=4,use_container_width=True)
+        st.image(test_image,width=4,use_column_width=True)
     #Predict button
     if(st.button("Predict")):
         st.snow()
@@ -83,9 +83,10 @@ elif(app_mode=="Disease Detection"):
             la xidhiidhia  qof ku takhasusay xanuunada dhirta
             """)
 
-        else: st.success("Model is Predicting it's a {}".format(d_name))
-        st.markdown(""" 
-            Geedkan wuu caafimaad qabaa!
+        else: 
+            st.success("Model is Predicting it's a {}".format(d_name))
+            st.markdown(""" 
+                Geedkan wuu caafimaad qabaa!
 
-            """)
+                """)
         
