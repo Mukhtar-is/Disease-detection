@@ -4,6 +4,6 @@ numpy
 matplotlib
 seaborn
 pandas
-streamlit==1.22.0
+streamlit
 librosa
 protobuf<3.20,>=3.9.2
