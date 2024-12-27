@@ -6,7 +6,7 @@ import numpy as np
 #Tensorflow Model Prediction
 def model_prediction(test_image):
 #    model = tf.keras.models.load_model("trained_maize_disease_model.keras")
-    model = tf.keras.models.load_model("maize_disease_detection_model3.h5")
+    model = tf.keras.models.load_model("maize_disease_detection_model.h5")
     image = tf.keras.preprocessing.image.load_img(test_image,target_size=(256,256))
 
     image_arr = tf.keras.preprocessing.image.img_to_array(image)    # processing image ka cusub ee shaqayna
