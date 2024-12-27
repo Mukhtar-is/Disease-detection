@@ -25,7 +25,7 @@ app_mode = st.sidebar.selectbox("Select Page",["Home","About Us","Disease Detect
 #Main Page
 if(app_mode=="Home"):
     st.header("PLANT DISEASE RECOGNITION SYSTEM")
-    image_path = "Home.JPG"
+    image_path = "Home.jpg"
     st.image(image_path,use_container_width=True)
     st.markdown("""
     Welcome to the Plant Disease Recognition System! 
