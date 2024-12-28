@@ -633,7 +633,7 @@ if app_mode == "🌿 Disease Detection":
                             This disease is characterized by long, cigar-shaped lesions on the leaves, which can coalesce and cause extensive leaf damage, leading to substantial yield losses. 
                             NCLB thrives in warm, humid conditions, which are common in Somaliland. 
                             
-                            ### Aprropirate Possible Solutions (Suggestion)          
+                            ### Appropriate Possible Actions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce fungal spores in the soil, and applying fungicides such as Azoxystrobin or Propiconazole at the early stages of infection. 
                             Additionally, proper field sanitation, including the removal of infected plant debris, and timely monitoring of crops for early signs of the disease are crucial steps to manage and mitigate the impact of this disease.      
                            
@@ -647,7 +647,7 @@ if app_mode == "🌿 Disease Detection":
                             This disease is identified by small, circular, cinnamon-brown pustules on both sides of the leaves, which can darken as the plant matures. 
                             The disease thrives in cool, moist conditions, typically between 15-25°C, and high humidity. Infected plants may exhibit chlorosis (yellowing) and premature leaf death, leading to significant yield losses. 
                             
-                            ### Aprropirate Possible Solutions (Suggestion)          
+                            ### Appropriate Possible Actions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, applying foliar fungicides such as mancozeb, pyraclostrobin, or azoxystrobin + propiconazole early in the season, and practicing crop rotation to reduce the presence of the fungus in the soil. 
                             Additionally, removing and destroying infected plant debris and monitoring crops regularly for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
                             
@@ -663,7 +663,7 @@ if app_mode == "🌿 Disease Detection":
                             The fungus survives in crop residue and spreads through wind and rain splash.
                             
                                        
-                            ### Aprropirate Possible Solutions (Suggestion)          
+                            ### Appropriate Possible Actions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce the presence of the fungus in the soil, and incorporating crop residues into the soil through tillage to promote decomposition. 
                             Applying fungicides such as strobilurins (e.g., Azoxystrobin) or triazoles (e.g., Propiconazole) at the early stages of infection can also be effective. Additionally, ensuring proper field sanitation by removing and destroying infected plant debris and regularly 
                             monitoring crops for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
