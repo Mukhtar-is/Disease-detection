@@ -622,12 +622,13 @@ if app_mode == "🌿 Disease Detection":
                     if disease_name != "Healthy":
                         st.warning(f"The leaf is affected by **{disease_name}** ⚠️")
                         # Model Performance Section (inside Disease Detection page)
-                        st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
-                        container = st.container()
-                        container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
+                        # st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
+                        # container = st.container()
+                        # container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
                                   
                         if disease_name == "Blight":
                             st.warning("""
+                            **Xanuunka laga helay caleentan waxa loo yaqaan qoyaan-caaryo burbur (Northern corn leaf blight)** 
                             Northern corn leaf blight (NCLB) in maize, caused by the fungus Exserohilum turcicum, is a significant concern in regions like Somaliland. 
                             This disease is characterized by long, cigar-shaped lesions on the leaves, which can coalesce and cause extensive leaf damage, leading to substantial yield losses. 
                             NCLB thrives in warm, humid conditions, which are common in Somaliland. 
@@ -641,6 +642,7 @@ if app_mode == "🌿 Disease Detection":
                             
                         elif disease_name == "Common Rust":
                             st.warning("""
+                            **Xanuunka laga helay caleentan waxa loo yaqaan caabuq daxaleed (Common Rust)**
                             Common Rust in maize, caused by the fungus Puccinia sorghi, is a prevalent issue in Somaliland. 
                             This disease is identified by small, circular, cinnamon-brown pustules on both sides of the leaves, which can darken as the plant matures. 
                             The disease thrives in cool, moist conditions, typically between 15-25°C, and high humidity. Infected plants may exhibit chlorosis (yellowing) and premature leaf death, leading to significant yield losses. 
@@ -654,6 +656,7 @@ if app_mode == "🌿 Disease Detection":
                             
                         elif disease_name == "Gray Leaf Spot":
                             st.warning("""
+                            **Xanuunka laga helay caleentan waxa loo yaqaan bal-bal bareed (Gray Leaf Spot)**
                             Gray Leaf Spot (GLS) in maize, caused by the fungus Cercospora zeae-maydis, is a significant threat to maize production in Somaliland. 
                             This disease is characterized by small, rectangular, brown to gray lesions that run parallel to the leaf veins. 
                             These lesions can coalesce, leading to extensive leaf blight and significant yield losses. GLS thrives in warm, humid conditions, which are common in Somaliland. 
