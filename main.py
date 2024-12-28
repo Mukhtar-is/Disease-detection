@@ -120,7 +120,7 @@ st.sidebar.markdown("<hr>", unsafe_allow_html=True)
 app_mode = st.sidebar.selectbox(
     "Select a Page:",
     ["🏠 Home", "📖 About", "🌿 Disease Detection", "📞 Contact"],  # Added "Contact"
-    index=0  # Default selection
+    index=2  # Default selection
 )
 
 
@@ -602,10 +602,10 @@ if app_mode == "🌿 Disease Detection":
     test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image is not None:
-        st.image(test_image, caption="Uploaded Image", width=300, use_column_width=False)  # Adjusted width
+        st.image(test_image, caption="Uploaded Image", width=300, use_container_width=False)  # Adjusted width
 
         # ---------------------------------------------------------Predict button--------------------------------------------------------------
-        if st.button("Predict"):
+        if st.button("Diagnost"):
             with st.spinner("Analyzing the image...............................................................................!"):
                 try:
                     # Model Prediction
