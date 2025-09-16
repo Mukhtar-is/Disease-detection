@@ -1,6 +1,7 @@
 tensorflow
 scikit-learn
 numpy
+google-generativeai
 matplotlib
 seaborn
 pandas
