@@ -3,6 +3,46 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 
+# Gemini Initialization (Confirmed)
+import os
+import google.generativeai as genai
+
+
+#----------------------------------------------------- AI initial start ---------------------------------------------------------------------------------
+
+# Configure Gemini API Key (keep this secret)
+genai.configure(api_key="AIzaSyAfmSU0iQ-ArgWSkWb4dtxQjkOZv0TwSC0")
+
+# Model configuration
+generation_config = {
+    "temperature": 1, 
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 8192,
+    "response_mime_type": "text/plain",
+}
+
+# Create Gemini model instance
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config=generation_config,
+)
+
+# Chat Session Setup
+chat_session = model.start_chat(
+    history=[
+        {
+            "role": "user",
+            "parts": [
+                "Waxaad tahay khabiir beeraleyda ah oo ku hadla af Soomaaliga. Ka jawaab su'aalaha la xiriira cudurrada dhirta, bacriminta, waraabka, iyo wax-soo-saarka beeraleyda si xirfad leh oo af Soomaali ah.",
+            ],
+        }
+    ]
+)
+
+# #----------------------------------------------------- AI initial end ---------------------------------------------------------------------------------
+
+
 
 # Set page configuration - this should be the very first Streamlit command
 st.set_page_config(
@@ -119,8 +159,8 @@ st.sidebar.markdown("<hr>", unsafe_allow_html=True)
 # Radio buttons for page selection, now with Contact page added
 app_mode = st.sidebar.selectbox(
     "Select a Page:",
-    ["🏠 Home", "📖 About", "🌿 Disease Detection", "📞 Contact"],  # Added "Contact"
-    index=2  # Default selection
+    ["🏠 Home", "📖 About", "🌿 Disease Detection", "📞 Contact", "🤖 AI Chat"],  # Added "Contact"
+    index=0  # Default selection
 )
 
 
@@ -132,6 +172,8 @@ elif app_mode == "📖 About":
     st.write("About Us")
 elif app_mode == "🌿 Disease Detection":
     st.write("Disease Detection Page")
+elif app_mode == "🤖 AI Chat":
+    st.write("Somali AI Agriexpert")
 elif app_mode == "📞 Contact":
     st.header("📞Contact Us")
 
@@ -376,6 +418,114 @@ if app_mode == "🏠 Home":
 # -------------------------------------------------- END  Section--------------------------------------------------------------------------------------
 
 
+#----------------------------------------------------- AI page start ---------------------------------------------------------------------------------
+if app_mode == "🤖 AI Chat":
+
+    def add_message(sender, message):
+        st.session_state.chat_history.append((sender, message))
+    
+
+    def display_message(sender, message, user_avatar=None, bot_avatar=None):
+        """
+        AI replies on the left (avatar + text),
+        user messages on the right (text + avatar).
+        """
+        ua = user_avatar or "https://example.com/avatar_user.png"
+        ba = bot_avatar  or "https://example.com/avatar_bot.png"
+        
+        if sender == "Adiga":  # user message
+            # [spacer][ text ][ avatar ]
+            spacer, text_col, avatar_col = st.columns([1, 8, 1])
+            with text_col:
+                # align the text to the right edge
+                st.markdown(
+                    f"<div style='text-align: right;'><strong>{sender}:</strong> {message}</div>",
+                    unsafe_allow_html=True
+                )
+            with avatar_col:
+                st.image(ua, width=40)
+        else:  # AgriBot reply
+            # [ avatar ][ text ][ spacer ]
+            avatar_col, text_col, spacer = st.columns([1, 8, 1])
+            with avatar_col:
+                st.image(ba, width=40)
+            with text_col:
+                st.markdown(f"**{sender}:** {message}")
+
+
+    ## QAYBTANI WAA OLD VERSION, MALAHA QAYBO KALA DUWAN OO USER KA AH IYO AI RESPNDKA
+    # def display_message(sender, message, avatar_url=None):
+    #     col1, col2 = st.columns([1, 9])
+    #     with col1:
+    #         if avatar_url:
+    #             st.image(avatar_url, width=40)
+    #     with col2:
+    #         st.markdown(f"**{sender}:** {message}")
+
+    
+    # 1Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # Display existing chat history
+    for sender, msg in st.session_state.chat_history:
+        display_message(
+            sender,
+            msg,
+            user_avatar="https://example.com/avatar_user.png",
+            bot_avatar="https://example.com/avatar_bot.png"
+        )
+
+
+    ## WAA CONTAINERKII HORE EE MESSAGYADU KU KAYDSAMAYEN
+    # with st.container():
+    #     st.markdown("### 🤖 La hadal Khabiirka Beeraha (AI)")
+    #     for sender, message in st.session_state.chat_history:
+    #         display_message(sender, message, avatar_url="https://example.com/avatar.png")
+
+
+    st.markdown("### 🤖 La hadal Khabiirka Beeraha (AI)")
+    # User input and response
+    user_prompt = st.text_area("Su'aashaada ku qor halkan (Af Soomaali):", height=100)
+
+    if st.button("Dir"):
+        if user_prompt.strip():
+            # Add user message
+            st.session_state.chat_history.append(("Adiga", user_prompt))
+            # add_message("Adiga", user_prompt)
+
+            # Get AI response
+            response = chat_session.send_message(user_prompt)
+            ai_reply = response.text
+
+            # Add AI message
+            st.session_state.chat_history.append(("AgriBot", ai_reply))
+            # add_message("AgriBot", ai_reply)
+
+            # Optional: play Somali speech
+            #speak_somali(ai_reply)
+        else:
+            st.warning("Fadlan qor su'aal si aad u hesho jawaab.")
+
+
+    
+    
+    
+    # user_prompt = st.text_area("Su'aashaada ku qor halkan (Af Soomaali):", height=100)
+
+    # if st.button("Dir"):
+    #     if user_prompt.strip():
+    #         response = chat_session.send_message(user_prompt)
+    #         st.markdown("**Jawaabta Khabiirka:**")
+    #         st.success(response.text)
+    #     else:
+    #         st.warning("Fadlan qor su'aal si aad u hesho jawaab.")
+
+
+
+
+
+#----------------------------------------------------- AI page end ---------------------------------------------------------------------------------
 
 
 
@@ -602,10 +752,10 @@ if app_mode == "🌿 Disease Detection":
     test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image is not None:
-        st.image(test_image, caption="Uploaded Image", width=300, use_container_width=False)  # Adjusted width
+        st.image(test_image, caption="Uploaded Image", width=300, use_column_width=False)  # Adjusted width
 
         # ---------------------------------------------------------Predict button--------------------------------------------------------------
-        if st.button("Diagnost"):
+        if st.button("Predict"):
             with st.spinner("Analyzing the image...............................................................................!"):
                 try:
                     # Model Prediction
@@ -622,18 +772,18 @@ if app_mode == "🌿 Disease Detection":
                     if disease_name != "Healthy":
                         st.warning(f"The leaf is affected by **{disease_name}** ⚠️")
                         # Model Performance Section (inside Disease Detection page)
-                        # st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
-                        # container = st.container()
-                        # container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
+                        st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
+                        container = st.container()
+                        container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
                                   
                         if disease_name == "Blight":
                             st.warning("""
-                            **Xanuunka laga helay caleentan waxa loo yaqaan qoyaan-caaryo burbur (Northern corn leaf blight)** 
+                            Xanuunka laga helay caleentan waxa loo yaqaan qoyaan-caaryo burbur (Northern corn leaf blight)          
                             Northern corn leaf blight (NCLB) in maize, caused by the fungus Exserohilum turcicum, is a significant concern in regions like Somaliland. 
                             This disease is characterized by long, cigar-shaped lesions on the leaves, which can coalesce and cause extensive leaf damage, leading to substantial yield losses. 
                             NCLB thrives in warm, humid conditions, which are common in Somaliland. 
                             
-                            ### Appropriate Possible Actions (Suggestion)          
+                            ### Appropriate Possible Solutions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce fungal spores in the soil, and applying fungicides such as Azoxystrobin or Propiconazole at the early stages of infection. 
                             Additionally, proper field sanitation, including the removal of infected plant debris, and timely monitoring of crops for early signs of the disease are crucial steps to manage and mitigate the impact of this disease.      
                            
@@ -642,12 +792,12 @@ if app_mode == "🌿 Disease Detection":
                             
                         elif disease_name == "Common Rust":
                             st.warning("""
-                            **Xanuunka laga helay caleentan waxa loo yaqaan caabuq daxaleed (Common Rust)**
+                            Xanuunka laga helay caleentan waxa loo yaqaan caabuq daxaleed (Common Rust) 
                             Common Rust in maize, caused by the fungus Puccinia sorghi, is a prevalent issue in Somaliland. 
                             This disease is identified by small, circular, cinnamon-brown pustules on both sides of the leaves, which can darken as the plant matures. 
                             The disease thrives in cool, moist conditions, typically between 15-25°C, and high humidity. Infected plants may exhibit chlorosis (yellowing) and premature leaf death, leading to significant yield losses. 
                             
-                            ### Appropriate Possible Actions (Suggestion)          
+                            ### Appropriate Possible Solutions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, applying foliar fungicides such as mancozeb, pyraclostrobin, or azoxystrobin + propiconazole early in the season, and practicing crop rotation to reduce the presence of the fungus in the soil. 
                             Additionally, removing and destroying infected plant debris and monitoring crops regularly for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
                             
@@ -656,14 +806,14 @@ if app_mode == "🌿 Disease Detection":
                             
                         elif disease_name == "Gray Leaf Spot":
                             st.warning("""
-                            **Xanuunka laga helay caleentan waxa loo yaqaan bal-bal bareed (Gray Leaf Spot)**
+                            Xanuunka laga helay caleentan waxa loo yaqaan bal-bal bareed (Gray Leaf Spot) 
                             Gray Leaf Spot (GLS) in maize, caused by the fungus Cercospora zeae-maydis, is a significant threat to maize production in Somaliland. 
                             This disease is characterized by small, rectangular, brown to gray lesions that run parallel to the leaf veins. 
                             These lesions can coalesce, leading to extensive leaf blight and significant yield losses. GLS thrives in warm, humid conditions, which are common in Somaliland. 
                             The fungus survives in crop residue and spreads through wind and rain splash.
                             
                                        
-                            ### Appropriate Possible Actions (Suggestion)          
+                            ### Appropriate Possible Solutions (Suggestion)          
                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce the presence of the fungus in the soil, and incorporating crop residues into the soil through tillage to promote decomposition. 
                             Applying fungicides such as strobilurins (e.g., Azoxystrobin) or triazoles (e.g., Propiconazole) at the early stages of infection can also be effective. Additionally, ensuring proper field sanitation by removing and destroying infected plant debris and regularly 
                             monitoring crops for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
