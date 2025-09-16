@@ -8,39 +8,6 @@ import os
 import google.generativeai as genai
 
 
-#----------------------------------------------------- AI initial start ---------------------------------------------------------------------------------
-
-# Configure Gemini API Key (keep this secret)
-genai.configure(api_key="AIzaSyAfmSU0iQ-ArgWSkWb4dtxQjkOZv0TwSC0")
-
-# Model configuration
-generation_config = {
-    "temperature": 1, 
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_mime_type": "text/plain",
-}
-
-# Create Gemini model instance
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config,
-)
-
-# Chat Session Setup
-chat_session = model.start_chat(
-    history=[
-        {
-            "role": "user",
-            "parts": [
-                "Waxaad tahay khabiir beeraleyda ah oo ku hadla af Soomaaliga. Ka jawaab su'aalaha la xiriira cudurrada dhirta, bacriminta, waraabka, iyo wax-soo-saarka beeraleyda si xirfad leh oo af Soomaali ah.",
-            ],
-        }
-    ]
-)
-
-# #----------------------------------------------------- AI initial end ---------------------------------------------------------------------------------
 
 
 
@@ -420,6 +387,46 @@ if app_mode == "🏠 Home":
 
 #----------------------------------------------------- AI page start ---------------------------------------------------------------------------------
 if app_mode == "🤖 AI Chat":
+
+    #----------------------------------------------------- AI initial start ---------------------------------------------------------------------------------
+
+    # Configure Gemini API Key (keep this secret)
+    genai.configure(api_key="AIzaSyAfmSU0iQ-ArgWSkWb4dtxQjkOZv0TwSC0")
+
+    # Model configuration
+    generation_config = {
+        "temperature": 1, 
+        "top_p": 0.95,
+        "top_k": 64,
+        "max_output_tokens": 8192,
+        "response_mime_type": "text/plain",
+    }
+
+    # Create Gemini model instance
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+    )
+
+    # Chat Session Setup
+    chat_session = model.start_chat(
+        history=[
+            {
+                "role": "user",
+                "parts": [
+                    "Waxaad tahay khabiir beeraleyda ah oo ku hadla af Soomaaliga. Ka jawaab su'aalaha la xiriira cudurrada dhirta, bacriminta, waraabka, iyo wax-soo-saarka beeraleyda si xirfad leh oo af Soomaali ah.",
+                ],
+            }
+        ]
+    )
+
+    # #----------------------------------------------------- AI initial end ---------------------------------------------------------------------------------
+
+
+
+
+
+
 
     def add_message(sender, message):
         st.session_state.chat_history.append((sender, message))
