@@ -391,7 +391,6 @@ if app_mode == "🤖 AI Chat":
     #----------------------------------------------------- AI initial start ---------------------------------------------------------------------------------
 
     # Configure Gemini API Key (keep this secret)
-    genai.configure(api_key="AIzaSyAfmSU0iQ-ArgWSkWb4dtxQjkOZv0TwSC0")
 
     # Model configuration
     generation_config = {
