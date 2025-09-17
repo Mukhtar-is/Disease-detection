@@ -40,19 +40,52 @@ model = tf.keras.models.load_model("maize_disease_detection_model.h5", compile=F
 
 #Tensorflow Model Prediction
 def model_prediction(test_image):
-#    model = tf.keras.models.load_model("maize_disease_detection_model.h5")
+# #    model = tf.keras.models.load_model("maize_disease_detection_model.h5")
 
-    image = tf.keras.preprocessing.image.load_img(test_image,target_size=(256,256))
-    # processing image ka cusub ee shaqayna
-    image_arr = tf.keras.preprocessing.image.img_to_array(image)
-    # new convert single image to batch (waxa u ku haboon yahay modelkena)    
+#     image = tf.keras.preprocessing.image.load_img(test_image,target_size=(256,256))
+#     # processing image ka cusub ee shaqayna
+#     image_arr = tf.keras.preprocessing.image.img_to_array(image)
+#     # new convert single image to batch (waxa u ku haboon yahay modelkena)    
+#     input_arr = np.expand_dims(image_arr, axis=0)
+#     # Predicting the image 
+#     predictions = model.predict(input_arr)
+#     # kalsoni inte leeg ayuu ku qabaa saadaalintan 
+#     confidence_pct = round(100 * (np.max(predictions)), 2)
+#     #return index of max element
+#     return np.argmax(predictions), confidence_pct 
+
+    """
+    Somali: Tani waxay aqbashaa UploadedFile (upload ama kamarad), bytes, path, ama PIL.Image.
+    Waxay u beddeshaa PIL.Image -> (256,256) -> array -> model.predict.
+    Waxay soo celineysaa (result_index:int, confidence_pct:float).
+    """
+    import io  # Somali: Si aan bytes/file-like ugu rogno sawir
+    from PIL import Image
+
+    # Somali: Akhri sawirka si badbaado leh iyadoo laga yaabo inuu ka yimid kamarad/upload/path
+    try:
+        if hasattr(test_image, "read"):          # UploadedFile / file-like (upload ama kamarad)
+            test_image.seek(0)
+            pil_img = Image.open(test_image).convert("RGB")
+        elif isinstance(test_image, (bytes, bytearray)):  # bytes
+            pil_img = Image.open(io.BytesIO(test_image)).convert("RGB")
+        else:  # path ama wax kale
+            pil_img = tf.keras.preprocessing.image.load_img(test_image, target_size=(256, 256))
+            pil_img = pil_img.convert("RGB")
+    except Exception as e:
+        # Somali: Haddii akhrisku khaldamo, fariin kooban
+        raise ValueError("Sawirka lama akhrin karo. Fadlan mar kale isku day.") from e
+
+    pil_img = pil_img.resize((256, 256))  # Somali: Hubi cabbirka model-ka
+    image_arr = tf.keras.preprocessing.image.img_to_array(pil_img)
     input_arr = np.expand_dims(image_arr, axis=0)
-    # Predicting the image 
+
+    # Somali: Isticmaal model-kaaga la soo rartay sida uu koodhkaaga hore u yahay
     predictions = model.predict(input_arr)
-    # kalsoni inte leeg ayuu ku qabaa saadaalintan 
-    confidence_pct = round(100 * (np.max(predictions)), 2)
-    #return index of max element
-    return np.argmax(predictions), confidence_pct 
+    confidence_pct = round(100 * float(np.max(predictions)), 2)
+    return int(np.argmax(predictions)), confidence_pct
+# halkan waa halkaan ku joogeye.
+
 
 
 # Sidebar Styling
@@ -389,129 +422,163 @@ if app_mode == "🏠 Home":
 if app_mode == "🤖 AI Chat":
 
     #----------------------------------------------------- AI initial start ---------------------------------------------------------------------------------
+    import streamlit as st
+    import google.generativeai as genai
 
-    # Configure Gemini API Key (keep this secret)
-
-    # Model configuration
-    generation_config = {
-        "temperature": 1, 
-        "top_p": 0.95,
-        "top_k": 64,
-        "max_output_tokens": 8192,
-        "response_mime_type": "text/plain",
-    }
-
-    # Create Gemini model instance
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        generation_config=generation_config,
-    )
-
-    # Chat Session Setup
-    chat_session = model.start_chat(
-        history=[
-            {
+    # ————— One-time setup of model & session —————
+    if "genai_session" not in st.session_state:
+        genai.configure(api_key=st.secrets["google"]["api_key"])
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            generation_config={
+                "temperature": 1,
+                "top_p": 0.95,
+                "top_k": 64,
+                "max_output_tokens": 8192,
+                "response_mime_type": "text/plain",
+            },
+        )
+        st.session_state.genai_session = model.start_chat(
+            history=[{
                 "role": "user",
                 "parts": [
-                    "Waxaad tahay khabiir beeraleyda ah oo ku hadla af Soomaaliga. Ka jawaab su'aalaha la xiriira cudurrada dhirta, bacriminta, waraabka, iyo wax-soo-saarka beeraleyda si xirfad leh oo af Soomaali ah.",
+                    "Waxaad tahay khabiir beeraleyda ah oo ku hadla af Soomaaliga. "
+                    "Ka jawaab su'aalaha la xiriira cudurrada dhirta, bacriminta, waraabka, "
+                    "iyo wax-soo-saarka beeraleyda si xirfad leh oo af Soomaali ah.",
                 ],
-            }
-        ]
-    )
+            }]
+        )
 
-    # #----------------------------------------------------- AI initial end ---------------------------------------------------------------------------------
+    chat_session = st.session_state.genai_session
 
-
-
-
-
-
-
-    def add_message(sender, message):
-        st.session_state.chat_history.append((sender, message))
-    
-
-    def display_message(sender, message, user_avatar=None, bot_avatar=None):
-        """
-        AI replies on the left (avatar + text),
-        user messages on the right (text + avatar).
-        """
-        ua = user_avatar or "https://example.com/avatar_user.png"
-        ba = bot_avatar  or "https://example.com/avatar_bot.png"
-        
-        if sender == "Adiga":  # user message
-            # [spacer][ text ][ avatar ]
-            spacer, text_col, avatar_col = st.columns([1, 8, 1])
-            with text_col:
-                # align the text to the right edge
+    # ————— Display helper (unchanged) —————
+    def display_message(sender, message, ua=None, ba=None):
+        ua = ua or "https://example.com/avatar_user.png"
+        ba = ba or "https://example.com/avatar_bot.png"
+        if sender == "Adiga":
+            _, tc, ac = st.columns([1, 8, 1])
+            with tc:
                 st.markdown(
                     f"<div style='text-align: right;'><strong>{sender}:</strong> {message}</div>",
                     unsafe_allow_html=True
                 )
-            with avatar_col:
+            with ac:
                 st.image(ua, width=40)
-        else:  # AgriBot reply
-            # [ avatar ][ text ][ spacer ]
-            avatar_col, text_col, spacer = st.columns([1, 8, 1])
-            with avatar_col:
+        else:
+            ac, tc, _ = st.columns([1, 8, 1])
+            with ac:
                 st.image(ba, width=40)
-            with text_col:
+            with tc:
                 st.markdown(f"**{sender}:** {message}")
 
+# Ensure chat_history exists
+    st.session_state.setdefault("chat_history", [])
 
-    ## QAYBTANI WAA OLD VERSION, MALAHA QAYBO KALA DUWAN OO USER KA AH IYO AI RESPNDKA
-    # def display_message(sender, message, avatar_url=None):
-    #     col1, col2 = st.columns([1, 9])
-    #     with col1:
-    #         if avatar_url:
-    #             st.image(avatar_url, width=40)
-    #     with col2:
-    #         st.markdown(f"**{sender}:** {message}")
+    # Render all past messages
+    for sender, msg in st.session_state.chat_history:
+        display_message(sender, msg)
+
+    # Callback that runs on form submit
+    def handle_submit():
+        prompt = st.session_state.user_prompt.strip()
+        if not prompt:
+            st.warning("Fadlan qor su'aal si aad u hesho jawaab.")
+            return
+
+        # 1) Echo user
+        st.session_state.chat_history.append(("Adiga", prompt))
+
+        # 2) Call AI inside a spinner
+        with st.spinner("Agribot waxa uu ka shaqeynayaa…"):
+            response = chat_session.send_message(prompt)
+        ai_reply = response.text
+
+        # 3) Append bot reply
+        st.session_state.chat_history.append(("AgriBot", ai_reply))
+
+    # Render the form with automatic clear on submit
+    with st.form(key="chat_form", clear_on_submit=True):
+        st.text_area(
+            "Su’aashaada ku qor halkan (Af Soomaali):",
+            key="user_prompt",
+            height=100
+        )
+        st.form_submit_button("Dir", on_click=handle_submit)
+
+    # 4) ————— NEW CHAT LOGIC SNIPPET ENDS HERE —————
+
+
+# OLD CODE
+    # def add_message(sender, message):
+    #     st.session_state.chat_history.append((sender, message))
+    
+
+    # def display_message(sender, message, user_avatar=None, bot_avatar=None):
+    #     """
+    #     AI replies on the left (avatar + text),
+    #     user messages on the right (text + avatar).
+    #     """
+    #     ua = user_avatar or "https://example.com/avatar_user.png"
+    #     ba = bot_avatar  or "https://example.com/avatar_bot.png"
+        
+    #     if sender == "Adiga":  # user message
+    #         # [spacer][ text ][ avatar ]
+    #         spacer, text_col, avatar_col = st.columns([1, 8, 1])
+    #         with text_col:
+    #             # align the text to the right edge
+    #             st.markdown(
+    #                 f"<div style='text-align: right;'><strong>{sender}:</strong> {message}</div>",
+    #                 unsafe_allow_html=True
+    #             )
+    #         with avatar_col:
+    #             st.image(ua, width=40)
+    #     else:  # AgriBot reply
+    #         # [ avatar ][ text ][ spacer ]
+    #         avatar_col, text_col, spacer = st.columns([1, 8, 1])
+    #         with avatar_col:
+    #             st.image(ba, width=40)
+    #         with text_col:
+    #             st.markdown(f"**{sender}:** {message}")
+
 
     
-    # 1Initialize chat history
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+    # # 1Initialize chat history
+    # if "chat_history" not in st.session_state:
+    #     st.session_state.chat_history = []
 
-    # Display existing chat history
-    for sender, msg in st.session_state.chat_history:
-        display_message(
-            sender,
-            msg,
-            user_avatar="https://example.com/avatar_user.png",
-            bot_avatar="https://example.com/avatar_bot.png"
-        )
-
-
-    ## WAA CONTAINERKII HORE EE MESSAGYADU KU KAYDSAMAYEN
-    # with st.container():
-    #     st.markdown("### 🤖 La hadal Khabiirka Beeraha (AI)")
-    #     for sender, message in st.session_state.chat_history:
-    #         display_message(sender, message, avatar_url="https://example.com/avatar.png")
+    # # Display existing chat history
+    # for sender, msg in st.session_state.chat_history:
+    #     display_message(
+    #         sender,
+    #         msg,
+    #         user_avatar="https://example.com/avatar_user.png",
+    #         bot_avatar="https://example.com/avatar_bot.png"
+    #     )
 
 
-    st.markdown("### 🤖 La hadal Khabiirka Beeraha (AI)")
-    # User input and response
-    user_prompt = st.text_area("Su'aashaada ku qor halkan (Af Soomaali):", height=100)
 
-    if st.button("Dir"):
-        if user_prompt.strip():
-            # Add user message
-            st.session_state.chat_history.append(("Adiga", user_prompt))
-            # add_message("Adiga", user_prompt)
+    # st.markdown("### 🤖 La hadal Khabiirka Beeraha (AI)")
+    # # User input and response
+    # user_prompt = st.text_area("Su'aashaada ku qor halkan (Af Soomaali):", height=100)
 
-            # Get AI response
-            response = chat_session.send_message(user_prompt)
-            ai_reply = response.text
+    # if st.button("Dir"):
+    #     if user_prompt.strip():
+    #         # Add user message
+    #         st.session_state.chat_history.append(("Adiga", user_prompt))
+    #         # add_message("Adiga", user_prompt)
 
-            # Add AI message
-            st.session_state.chat_history.append(("AgriBot", ai_reply))
-            # add_message("AgriBot", ai_reply)
+    #         # Get AI response
+    #         response = chat_session.send_message(user_prompt)
+    #         ai_reply = response.text
 
-            # Optional: play Somali speech
-            #speak_somali(ai_reply)
-        else:
-            st.warning("Fadlan qor su'aal si aad u hesho jawaab.")
+    #         # Add AI message
+    #         st.session_state.chat_history.append(("AgriBot", ai_reply))
+    #         # add_message("AgriBot", ai_reply)
+
+    #         # Optional: play Somali speech
+    #         #speak_somali(ai_reply)
+    #     else:
+    #         st.warning("Fadlan qor su'aal si aad u hesho jawaab.")
 
 
     
@@ -748,6 +815,8 @@ if app_mode == "📖 About":
 
 
 
+
+
 # --------------------------------------------Disease Detection Page------------------------------------------------------------------
 if app_mode == "🌿 Disease Detection":
     st.header("🌿 Disease Detection")
@@ -755,32 +824,47 @@ if app_mode == "🌿 Disease Detection":
 
     # -----------------------------------------------------File uploader for image--------------------------------------------------------
 
-    test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
+    # ----------------------------------- #halkan waa halkan aan badalka sameeyey.
+    # Somali: Labada ikhtiyaar ee sawirka — Upload ama Kamarad; mid kasta wuu shaqaynayaa
+    tab_upload, tab_camera = st.tabs(["📤 Upload", "📷 Camera"])  # Somali: Tabs si beeralaydu u doortaan
 
-    if test_image is not None:
-        st.image(test_image, caption="Uploaded Image", width=300, use_column_width=False)  # Adjusted width
+    with tab_upload:
+        # Somali: Isla uploader-kii hore oo aan beddelin fahamka koodhka intiisa kale
+        test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
+
+    with tab_camera:
+        # Somali: Kamaradda mobilka/PC-ga toos uga qaad sawirka caleenta
+        camera_photo = st.camera_input("Sawir ka qaad caleenta (kamarad)")
+
+    # Somali: Haddii kamarad la adeegsaday, dooro taas; haddii kale ka qaado upload
+    img_for_model = camera_photo or test_image
+
+    if img_for_model is not None:
+        # Somali: Tus sawirka la doortay si degdeg ah loo xaqiijiyo
+        st.image(img_for_model, caption="Uploaded Image", width=300, use_column_width=False)  # Adjusted width
 
         # ---------------------------------------------------------Predict button--------------------------------------------------------------
         if st.button("Predict"):
             with st.spinner("Analyzing the image...............................................................................!"):
                 try:
-                    # Model Prediction
-                    result_index, confidence_pct = model_prediction(test_image) # modify
+                    # Model Prediction (Somali: Halkaan waxaan u gudbineynaa img_for_model si uploader/camera labaduba u shaqeeyaan)
+                    result_index, confidence_pct = model_prediction(img_for_model)  # modify
+    # halkan waa halkaan ku joogeye.
 
                     # Labels
                     class_names = ['Blight', 'Common Rust', 'Gray Leaf Spot', 'Healthy']
                     disease_name = class_names[result_index]
                     #confidence_pct = round(confidence * 100, 2)
                     
-                    #st.write(f"**Analyzing the image...**: {disease_name}")
-                    #st.write(f"**Confidence Level**: {confidence_pct}%")
+                    #st.write(f"*Analyzing the image...*: {disease_name}")
+                    #st.write(f"*Confidence Level*: {confidence_pct}%")
 
                     if disease_name != "Healthy":
-                        st.warning(f"The leaf is affected by **{disease_name}** ⚠️")
+                        st.warning(f"The leaf is affected by *{disease_name}* ⚠")
                         # Model Performance Section (inside Disease Detection page)
                         st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
                         container = st.container()
-                        container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
+                        container.write(f"The disease found on this leaf is *{disease_name}*, with a confidence level of {confidence_pct}%")
                                   
                         if disease_name == "Blight":
                             st.warning("""
@@ -793,7 +877,7 @@ if app_mode == "🌿 Disease Detection":
                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce fungal spores in the soil, and applying fungicides such as Azoxystrobin or Propiconazole at the early stages of infection. 
                             Additionally, proper field sanitation, including the removal of infected plant debris, and timely monitoring of crops for early signs of the disease are crucial steps to manage and mitigate the impact of this disease.      
                            
-                            **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+                            *If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible*
                                         """)
                             
                         elif disease_name == "Common Rust":
@@ -807,7 +891,7 @@ if app_mode == "🌿 Disease Detection":
                             Quick control measures include planting resistant maize varieties, applying foliar fungicides such as mancozeb, pyraclostrobin, or azoxystrobin + propiconazole early in the season, and practicing crop rotation to reduce the presence of the fungus in the soil. 
                             Additionally, removing and destroying infected plant debris and monitoring crops regularly for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
                             
-                            **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+                            *If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible*
                                         """)
                             
                         elif disease_name == "Gray Leaf Spot":
@@ -824,12 +908,12 @@ if app_mode == "🌿 Disease Detection":
                             Applying fungicides such as strobilurins (e.g., Azoxystrobin) or triazoles (e.g., Propiconazole) at the early stages of infection can also be effective. Additionally, ensuring proper field sanitation by removing and destroying infected plant debris and regularly 
                             monitoring crops for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
                             
-                            **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+                            *If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible*
                                         """)
 
                     else:
                         st.snow()
-                        st.success(f"The leaf is **{disease_name}**. No diseases detected. ✅")
+                        st.success(f"The leaf is *{disease_name}*. No diseases detected. ✅")
 
                         st.success("""
                             Congradulation! your plant is healthy. To ensure your maize leaves remain healthy and productive, regularly monitor your plants for any signs of disease or pest damage, as early detection is crucial. 
@@ -837,20 +921,126 @@ if app_mode == "🌿 Disease Detection":
                             Practice crop rotation to reduce soil-borne pathogens and pests, and plant resistant maize varieties to minimize the risk of infection. Maintain proper field sanitation by removing and destroying plant debris from previous crops to prevent pathogen overwintering. 
                             Implement integrated pest management (IPM) strategies to control pests effectively, and apply fungicides promptly if early signs of fungal diseases are detected. By following these suggestions, you can help keep your maize leaves healthy and your crops productive. 
                             
-                            **If you need more detailed advice on any of these points, feel free to contact agriculture consultant!.*
+                            *If you need more detailed advice on any of these points, feel free to contact agriculture consultant!.
                                         """)
 
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
     else:
         st.warning("""Please upload an image of leaf to proceed. 
-                   Sawir maad so gudbin weli, fadlan soo gudbi sawir ka caleenta geedka ⚠️
+                   Sawir maad so gudbin weli, fadlan soo gudbi sawir ka caleenta geedka ⚠
                    
                    """)
 
 
 
 #  -------------------------------------------------------END Predict button--------------------------------------------------------------------------------------------       
+
+
+
+# # --------------------------------------------Disease Detection Page Old one (there is no camera in this)------------------------------------------------------------------
+# if app_mode == "🌿 Disease Detection":
+#     st.header("🌿 Disease Detection")
+#     st.write("Upload an image of a maize leaf to detect potential diseases 📸")
+
+#     # -----------------------------------------------------File uploader for image--------------------------------------------------------
+
+#     test_image = st.file_uploader("Choose an Image:", type=["jpg", "jpeg", "png"])
+
+#     if test_image is not None:
+#         st.image(test_image, caption="Uploaded Image", width=300, use_column_width=False)  # Adjusted width
+
+#         # ---------------------------------------------------------Predict button--------------------------------------------------------------
+#         if st.button("Predict"):
+#             with st.spinner("Analyzing the image...............................................................................!"):
+#                 try:
+#                     # Model Prediction
+#                     result_index, confidence_pct = model_prediction(test_image) # modify
+
+#                     # Labels
+#                     class_names = ['Blight', 'Common Rust', 'Gray Leaf Spot', 'Healthy']
+#                     disease_name = class_names[result_index]
+#                     #confidence_pct = round(confidence * 100, 2)
+                    
+#                     #st.write(f"**Analyzing the image...**: {disease_name}")
+#                     #st.write(f"**Confidence Level**: {confidence_pct}%")
+
+#                     if disease_name != "Healthy":
+#                         st.warning(f"The leaf is affected by **{disease_name}** ⚠️")
+#                         # Model Performance Section (inside Disease Detection page)
+#                         st.markdown("<h2 style='text-align: center; color: {primary_green};'>📊 Model Performance</h2>", unsafe_allow_html=True)
+#                         container = st.container()
+#                         container.write(f"The disease found on this leaf is **{disease_name}**, with a confidence level of {confidence_pct}%")
+                                  
+#                         if disease_name == "Blight":
+#                             st.warning("""
+#                             Xanuunka laga helay caleentan waxa loo yaqaan qoyaan-caaryo burbur (Northern corn leaf blight)          
+#                             Northern corn leaf blight (NCLB) in maize, caused by the fungus Exserohilum turcicum, is a significant concern in regions like Somaliland. 
+#                             This disease is characterized by long, cigar-shaped lesions on the leaves, which can coalesce and cause extensive leaf damage, leading to substantial yield losses. 
+#                             NCLB thrives in warm, humid conditions, which are common in Somaliland. 
+                            
+#                             ### Appropriate Possible Solutions (Suggestion)          
+#                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce fungal spores in the soil, and applying fungicides such as Azoxystrobin or Propiconazole at the early stages of infection. 
+#                             Additionally, proper field sanitation, including the removal of infected plant debris, and timely monitoring of crops for early signs of the disease are crucial steps to manage and mitigate the impact of this disease.      
+                           
+#                             **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+#                                         """)
+                            
+#                         elif disease_name == "Common Rust":
+#                             st.warning("""
+#                             Xanuunka laga helay caleentan waxa loo yaqaan caabuq daxaleed (Common Rust) 
+#                             Common Rust in maize, caused by the fungus Puccinia sorghi, is a prevalent issue in Somaliland. 
+#                             This disease is identified by small, circular, cinnamon-brown pustules on both sides of the leaves, which can darken as the plant matures. 
+#                             The disease thrives in cool, moist conditions, typically between 15-25°C, and high humidity. Infected plants may exhibit chlorosis (yellowing) and premature leaf death, leading to significant yield losses. 
+                            
+#                             ### Appropriate Possible Solutions (Suggestion)          
+#                             Quick control measures include planting resistant maize varieties, applying foliar fungicides such as mancozeb, pyraclostrobin, or azoxystrobin + propiconazole early in the season, and practicing crop rotation to reduce the presence of the fungus in the soil. 
+#                             Additionally, removing and destroying infected plant debris and monitoring crops regularly for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
+                            
+#                             **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+#                                         """)
+                            
+#                         elif disease_name == "Gray Leaf Spot":
+#                             st.warning("""
+#                             Xanuunka laga helay caleentan waxa loo yaqaan bal-bal bareed (Gray Leaf Spot) 
+#                             Gray Leaf Spot (GLS) in maize, caused by the fungus Cercospora zeae-maydis, is a significant threat to maize production in Somaliland. 
+#                             This disease is characterized by small, rectangular, brown to gray lesions that run parallel to the leaf veins. 
+#                             These lesions can coalesce, leading to extensive leaf blight and significant yield losses. GLS thrives in warm, humid conditions, which are common in Somaliland. 
+#                             The fungus survives in crop residue and spreads through wind and rain splash.
+                            
+                                       
+#                             ### Appropriate Possible Solutions (Suggestion)          
+#                             Quick control measures include planting resistant maize varieties, practicing crop rotation to reduce the presence of the fungus in the soil, and incorporating crop residues into the soil through tillage to promote decomposition. 
+#                             Applying fungicides such as strobilurins (e.g., Azoxystrobin) or triazoles (e.g., Propiconazole) at the early stages of infection can also be effective. Additionally, ensuring proper field sanitation by removing and destroying infected plant debris and regularly 
+#                             monitoring crops for early signs of infection are crucial steps to manage and mitigate the impact of this disease.
+                            
+#                             **If you need further details or guidance on managing this disease, please contact agriculture consultant as quick as possible**
+#                                         """)
+
+#                     else:
+#                         st.snow()
+#                         st.success(f"The leaf is **{disease_name}**. No diseases detected. ✅")
+
+#                         st.success("""
+#                             Congradulation! your plant is healthy. To ensure your maize leaves remain healthy and productive, regularly monitor your plants for any signs of disease or pest damage, as early detection is crucial. 
+#                             Use balanced fertilization to provide essential nutrients like nitrogen, phosphorus, and potassium, which are vital for leaf development. Ensure adequate irrigation, especially during critical growth stages, but avoid overwatering to prevent root diseases. 
+#                             Practice crop rotation to reduce soil-borne pathogens and pests, and plant resistant maize varieties to minimize the risk of infection. Maintain proper field sanitation by removing and destroying plant debris from previous crops to prevent pathogen overwintering. 
+#                             Implement integrated pest management (IPM) strategies to control pests effectively, and apply fungicides promptly if early signs of fungal diseases are detected. By following these suggestions, you can help keep your maize leaves healthy and your crops productive. 
+                            
+#                             **If you need more detailed advice on any of these points, feel free to contact agriculture consultant!.*
+#                                         """)
+
+#                 except Exception as e:
+#                     st.error(f"An error occurred: {e}")
+#     else:
+#         st.warning("""Please upload an image of leaf to proceed. 
+#                    Sawir maad so gudbin weli, fadlan soo gudbi sawir ka caleenta geedka ⚠️
+                   
+#                    """)
+
+
+
+# #  -------------------------------------------------------END Predict button--------------------------------------------------------------------------------------------       
 
 
 # ----------------------------------------------------Adding Custom CSS for Responsiveness---------------------------------------------------------------------
